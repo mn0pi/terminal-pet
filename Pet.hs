@@ -15,6 +15,8 @@ step :: Event -> Pet -> Pet
 mood :: Pet -> Mood
 moodName :: Pet -> String
 isDead :: Pet -> Bool
+runEvents :: [Event] -> Pet -> Pet
+catchUp :: Int -> Pet -> Pet
 
 maxStat :: Int
 
@@ -57,5 +59,10 @@ moodName p = show (mood p)
 
 isDead p = mood p == Dead
 
+runEvents [] p = p
+runEvents (e:es) p = runEvents es (step e p)
+
+catchUp 0 p = p
+catchUp n p = catchUp (n-1) (tick p)
 
 
