@@ -1,8 +1,10 @@
-data Mood = Happy | Sad | Tired | Starving | Bored | Dead deriving (Show, Eq)
+data Mood = Happy | Sad | Energetic | Tired | Satisfied | Hungry | Neutral  deriving (Show, Eq)
+data Status = Starving | Full | Elated | Depressed | Exhausted | Excited | Fine | Dead deriving (Show, Eq)
 data Event = Feed | Play | Sleep | Tick deriving (Show, Eq)
 data Pet = Pet String Int Int Int deriving (Show, Eq)
 
 type Action = Pet -> Pet
+type Memory = [Event]
 
 newPet :: String -> Pet
 clamp :: Int -> Int
@@ -11,12 +13,24 @@ feedBy :: Int -> Action
 bar :: Int -> String
 statLabels :: [String]
 statPanel :: Pet -> [String]
+
 step :: Event -> Pet -> Pet
+
 mood :: Pet -> Mood
 moodName :: Pet -> String
+
+status :: Pet -> Status
+statusName :: Pet -> String
+
 isDead :: Pet -> Bool
 runEvents :: [Event] -> Pet -> Pet
 catchUp :: Int -> Pet -> Pet
+percent :: Int -> Int -> Maybe Int
+pct :: Int -> Int
+tryStep :: Event -> Pet -> Maybe Pet
+describeTry :: Event -> Pet -> String
+
+remember :: Event -> Memory -> Memory
 
 maxStat :: Int
 
@@ -48,21 +62,56 @@ feast = feedBy 4
 bar n = [if x <= n then '#' else '.' | x <- [1..maxStat]]
 statPanel (Pet name f h e) = [label ++ ": " ++ bar v | (label, v) <- zip statLabels [f, h, e]]
 
-mood (Pet name f h e)
-      | f == 0 && h == 0 && e == 0 = Dead
-      | e == 0 = Tired
-      | h == 0 = Sad
-      | f == 0 = Starving
-      | otherwise = Happy
+mood (Pet _ f h e)
+      | f == 0 && h == 0 && e == 0 = Neutral
+      | pct h > 66 = Happy
+      | pct h < 34 = Sad
+      | pct e > 66 = Energetic
+      | pct e < 34 = Tired
+      | pct f > 66 = Satisfied
+      | pct f < 34 = Hungry
+      | otherwise = Neutral
 
 moodName p = show (mood p)
 
-isDead p = mood p == Dead
+status (Pet _ f h e)
+      | f == 0 && h == 0 && e == 0 = Dead
+      | f == 0 = Starving
+      | h == 0 = Depressed
+      | e == 0 = Exhausted
+      | h == maxStat = Elated
+      | e == maxStat = Excited
+      | f == maxStat = Full
+      | otherwise = Fine
+
+statusName p = show (status p)
+
+isDead p = status p == Dead
 
 runEvents [] p = p
 runEvents (e:es) p = runEvents es (step e p)
 
 catchUp 0 p = p
 catchUp n p = catchUp (n-1) (tick p)
+
+percent x 0 = Nothing
+percent x y = Just (x `div` y)
+
+pct x = x * 100 `div` maxStat
+
+showPercent Nothing = "Error!"
+showPercent (Just x) = show x
+
+tryStep _ (Pet _ 0 0 0) = Nothing
+tryStep Play (Pet _ _ _ 0) = Nothing
+tryStep Feed (Pet _ 10 _ _) = Nothing
+tryStep ev p = Just (step ev p)
+
+describeTry _ (Pet _ 0 0 0) = "Pet is dead."
+describeTry Play (Pet _ _ _ 0) = "Pet is too exhausted!"
+describeTry Feed (Pet _ 10 _ _) = "Pet is full!"
+describeTry ev p = show ev ++ " successful :)"
+
+remember = (:)
 
 
