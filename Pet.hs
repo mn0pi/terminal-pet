@@ -31,6 +31,7 @@ tryStep :: Event -> Pet -> Maybe Pet
 describeTry :: Event -> Pet -> String
 
 remember :: Event -> Memory -> Memory
+summary :: [Event] -> String
 
 maxStat :: Int
 
@@ -88,8 +89,7 @@ statusName p = show (status p)
 
 isDead p = status p == Dead
 
-runEvents [] p = p
-runEvents (e:es) p = runEvents es (step e p)
+runEvents ev p = foldl (flip step) p ev
 
 catchUp 0 p = p
 catchUp n p = catchUp (n-1) (tick p)
@@ -113,5 +113,6 @@ describeTry Feed (Pet _ 10 _ _) = "Pet is full!"
 describeTry ev p = show ev ++ " successful :)"
 
 remember = (:)
+summary ev = foldr (\e rest -> if null rest then show e else show e ++ ", " ++ rest) "" ev  
 
 
