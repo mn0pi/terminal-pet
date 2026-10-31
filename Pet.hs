@@ -1,3 +1,5 @@
+module Pet where
+
 data Mood = Happy | Sad | Energetic | Tired | Satisfied | Hungry | Neutral  deriving (Show, Eq)
 data Status = Starving | Full | Elated | Depressed | Exhausted | Excited | Fine | Dead deriving (Show, Eq)
 data Event = Feed | Play | Sleep | Tick deriving (Show, Eq)
